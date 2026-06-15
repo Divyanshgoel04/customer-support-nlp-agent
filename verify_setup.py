@@ -29,9 +29,11 @@ print(f"FastAPI: {fastapi.__version__}")
 import streamlit
 print(f"Streamlit: {streamlit.__version__}")
 
-df = pd.read_csv("data/raw/customer_support_tickets.csv")
+# Check new dataset
+df = pd.read_csv("data/raw/Bitext_support.csv")
 print(f"\nDataset loaded successfully")
 print(f"Shape: {df.shape}")
 print(f"Columns: {list(df.columns)}")
-print(f"Categories: {df['Ticket Type'].unique()}")
-print(f"Sample ticket:\n{df['Ticket Description'].iloc[0]}")
+print(f"Categories: {df['category'].unique()}")
+print(f"Sample instruction:\n{df['instruction'].iloc[0]}")
+print(f"Sample response:\n{df['response'].iloc[0]}")
