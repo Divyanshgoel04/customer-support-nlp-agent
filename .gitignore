@@ -220,7 +220,7 @@ __marimo__/
 .env
 
 # Model files (too large for GitHub)
-models/
+# models/
 *.pt
 *.bin
 *.pkl
@@ -235,3 +235,6 @@ data/processed/
 # Python cache
 __pycache__/
 *.pyc
+
+*.safetensors
+*.bin
