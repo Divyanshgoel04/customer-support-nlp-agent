@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from models import Customer, Order, Ticket, get_session
 
 def get_order_details(order_id: str):
