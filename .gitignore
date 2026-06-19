@@ -238,3 +238,4 @@ __pycache__/
 
 *.safetensors
 *.bin
+data/knowledge_base/
