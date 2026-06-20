@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -10,9 +9,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_openai import ChatOpenAI
-from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage, SystemMessage
+from langgraph.prebuilt import create_react_agent
 
 from src.agent.tools import (
     lookup_order,
@@ -26,7 +24,6 @@ from src.agent.tools import (
 from src.agent.prompts import SYSTEM_PROMPT
 from src.agent.router import route_ticket
 
-# All tools available to the agent
 TOOLS = [
     lookup_order,
     lookup_customer,
@@ -37,48 +34,28 @@ TOOLS = [
     escalate_to_human
 ]
 
+from langchain_groq import ChatGroq
+
 def create_agent():
-    """Create and return the LangChain agent executor."""
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
+    llm = ChatGroq(
+        model="llama-3.1-8b-instant",
         temperature=0,
         max_tokens=1000
     )
     
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        MessagesPlaceholder(variable_name="chat_history", optional=True),
-        ("human", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad")
-    ])
-    
-    agent = create_openai_tools_agent(llm, TOOLS, prompt)
-    
-    executor = AgentExecutor(
-        agent=agent,
+    agent = create_react_agent(
+        model=llm,
         tools=TOOLS,
-        max_iterations=6,
-        verbose=True,
-        handle_parsing_errors=True
+        prompt=SYSTEM_PROMPT
     )
     
-    return executor
+    return agent
 
 
-def handle_ticket(ticket_text: str, intent: str, confidence: float, 
+def handle_ticket(ticket_text: str, intent: str, confidence: float,
                   customer_id: str = None, order_id: str = None) -> dict:
     """
     Main entry point for handling a customer ticket.
-    
-    Args:
-        ticket_text: Raw customer message
-        intent: Predicted intent from classifier
-        confidence: Classifier confidence score
-        customer_id: Optional customer ID if known
-        order_id: Optional order ID if mentioned
-    
-    Returns:
-        dict with response, action_taken, escalated, tools_used
     """
     
     # Step 1 — Route the ticket
@@ -118,17 +95,23 @@ def handle_ticket(ticket_text: str, intent: str, confidence: float,
     
     # Step 4 — Run agent
     try:
-        agent_executor = create_agent()
-        response = agent_executor.invoke({"input": context})
-        result['response'] = response['output']
+        agent = create_agent()
+        
+        response = agent.invoke({
+            "messages": [{"role": "user", "content": context}]
+        })
+        
+        # Extract final message from response
+        final_message = response["messages"][-1].content
+        result['response'] = final_message
         
     except Exception as e:
-        # If agent fails, escalate to human
         result['response'] = (
             "We apologize for the inconvenience. Your request is being "
             "forwarded to a human agent for assistance."
         )
         result['escalated'] = True
         result['error'] = str(e)
+        print(f"Agent error: {e}")
     
     return result

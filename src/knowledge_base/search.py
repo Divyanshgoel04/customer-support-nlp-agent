@@ -14,7 +14,10 @@ def get_collection():
     if _collection is None:
         chroma_path = os.path.join(BASE_DIR, "data", "knowledge_base")
         _client = chromadb.PersistentClient(path=chroma_path)
-        _collection = _client.get_collection("support_responses")
+        _collection = _client.get_or_create_collection(
+            name="support_responses",
+            metadata={"hnsw:space": "cosine"}
+        )
     return _collection
 
 def get_embedder():

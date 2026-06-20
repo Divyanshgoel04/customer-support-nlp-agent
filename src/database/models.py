@@ -46,6 +46,9 @@ class Ticket(Base):
     timestamp = Column(String)
 
 def get_engine():
+    # Load .env from project root
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env')
+    load_dotenv(env_path)
     database_url = os.getenv('DATABASE_URL')
     return create_engine(database_url)
 
