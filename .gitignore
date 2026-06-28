@@ -239,3 +239,7 @@ __pycache__/
 *.safetensors
 *.bin
 data/knowledge_base/
+
+frontend/node_modules/
+frontend/.env
+frontend/dist/
